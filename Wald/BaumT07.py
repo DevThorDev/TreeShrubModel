@@ -650,6 +650,7 @@ tPrpPinch_Zweig_w = (0.2, 0.07)
 tPrpPinch_Zweig_x = (0.25, 0.09)
 
 # "Blatt" data -----------------------------------------------------------------
+# TODO - make these values stochastic (i.e. tuples)
 fAngBlattPlr = 1.4  # factor (mult.) for polar angle of "Blatt"    []
 lenBlatt = 2.0      # [cm]
 widBlatt = 1.0      # [cm]
@@ -885,6 +886,15 @@ tTypeAdjPrPZw_RelPKt = ('linA', dParFAdj_RelPKt, 'dec') # std1 / lin         // 
 tTypeAdjPrPZw_LenZw = ('std1', dParFAdj_LenZw, 'inc')   # std1 / logF        // // inc / dec
 tTypeAdjPrPZw_AgeZw = ('logF', dParFAdj_AgeZw, 'inc')   # std1 / logF        // // inc / dec
 tTypeAdjPrPZw_AgeBm = ('std1', dParFAdj_AgeBm, 'inc')   # std1 / logF        // // inc / dec
+
+# light collection -------------------------------------------------------------
+tPrpDLC = (0.5, 0.0)                    # (prop. direct light absorbed, refl.)
+tPrpSLC = (0.75, 0.0)                   # (prop. scat. light absorbed, refl.)
+aSigLC = 2.                             # 'a' of sigmoid light absorpt. funct.
+bSigLC = 1.                             # 'b' of sigmoid light absorpt. funct.
+cSigLC = 1.                             # 'c' of sigmoid light absorpt. funct.
+dSigLC = -0.02                           # 'd' of sigmoid light absorpt. funct.
+eSigLC = -1.                            # 'e' of sigmoid light absorpt. funct.
 
 # other variables --------------------------------------------------------------
 tDmTOffs = (0.2095, 0.02)               # [cm]
@@ -1584,6 +1594,10 @@ dictInpB = {# general
             'dMMFAdj': dMMFAdj,
             # direction dependent function types
             'dTypeAdj': dTypeAdj,
+            # light collection
+            'tPrpDLC': tPrpDLC,
+            'tPrpSLC': tPrpSLC,
+            'tSigLC': (aSigLC, bSigLC, cSigLC, dSigLC, eSigLC),
             # other variables
             'tDmTOffs': tDmTOffs,
             'tDmTInc': tDmTInc,

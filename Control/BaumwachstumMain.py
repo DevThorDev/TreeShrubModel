@@ -1,7 +1,7 @@
 ################################################################################
 # BaumwachstumMain.py #
 ################################################################################
-# TODO !
+#
 # Johannistriebe (zugleich Austrieb mit Blatt)
 # Alter des Baumes bestimmt:
 #    * Laengenwachstum der neuen Zweige
@@ -40,7 +40,6 @@
 #    * Wuchsrichtung des Blattes
 # Zusaetzlich Liste von aktiven (und ev. inaktiven) Knoten
 
-# DONE ...
 # Blaetter inkl. Wuchsrichtung und Laenge/Breite
 # Relative Position des Knotens auf dem tragenden Zweig (Distanz) bestimmt:
 #    * Laengenwachstum des neuen Zweiges
@@ -99,8 +98,9 @@ print('\n', '+'*80, '\n')
 print(cBaumGr)
 cBaumGr.printBaeume()
 cBaumGr.growBaeume(inpDataA)
-print('+'*20, 'dBlocks (FINAL)', '+'*20)
-cBaumGr.cMk.printDBlocks()
+if cBaumGr.dIA['lvlDbg'] > 0:
+    print('+'*20, 'dBlocks (FINAL)', '+'*20)
+    cBaumGr.cMk.printDBlocks()
 
 # cBaumGr.collectLight()
 

@@ -12,47 +12,55 @@ for cDSub in lDSub:
 from Konstanten import (M_DETER, M_STOCH, P0, UV_X_3D, UV_Y_3D, UV_Z_3D,
                         BASIS_R3, EPS)
 
+# --- Input: Debug Info --------------------------------------------------------
+levelDebugOut = 0   # level of debug output (0: no debug output)
+
 # --- Input: Allgemeine Daten --------------------------------------------------
 # dBaumGruppe = {4: [((0., 0., 0.), 0),       # key: index of "Baum" type
 #                    ((30., 10., 0.), 2)],    # value: list of tuples:
 #                1: [((-10., -20., 0.), 1)]}  # [(starting pos., start year)]
-# dBaumGruppe = {5: [((0., 0., 0.), 0),
+# dBaumGruppe = {4: [((0., 0., 0.), 0),
 #                    ((40., 25., 0.), 1),
 #                    ((-40., 25., 0.), 2),
-#                    ((60., 35., 0.), 3),
+#                    ((60., 35., 0.), 1),
 #                    ((-60., -40., 0.), 0),
 #                    ((30., 10., 0.), 1),
 #                    ((40., -50., 0.), 2),
-#                    ((-20., -60., 0.), 3),
-#                    ((70., -40., 0.), 4)],
-#                4: [((-80., 60., 0.), 5)]}
+#                    ((-20., -60., 0.), 1),
+#                    ((70., -40., 0.), 0)],
+#                7: [((-80., 60., 0.), 0)]}
 # dBaumGruppe = {6: [((0., 0., 0.), 0),
 #                    ((-80., 0., 0.), 2),
 #                    ((80., 0., 0.), 2),
 #                    ((-160., 0., 0.), 1),
 #                    ((160., 0., 0.), 1)]}
-# dBaumGruppe = {2: [((-200., -150., 0.), 0),
-#                    ((-150., 0., 0.), 1),],
-#                4: [((-100., -150., 0.), 0),
-#                    ((-50., 0., 0.), 1)],
-#                5: [((0., -150., 0.), 0),
-#                    ((50., 0., 0.), 1)],
-#                6: [((100., -150., 0.), 1),
-#                    ((150., 0., 0.), 2)]}
-dBaumGruppe = {4: [((0., 0., 0.), 1)],
-               7: [((-150., 0., 0.), 0),
-                   ((150., 100., 0.), 1)]}
+# dBaumGruppe = {7: [((50., -13., 0.), 0),
+#                    ((180., -60., 0.), 1),
+#                    ((27., -178., 0.), 1),
+#                    ((-106., -63., 0.), 0),
+#                    ((-146., 59., 0.), 0),
+#                    ((154., -175., 0.), 2),
+#                    ((170., 193., 0.), 1)],
+#                4: [((-50., 80., 0.), 2),
+#                    ((-180., 180., 0.), 1)]}
+# dBaumGruppe = {4: [((-20., -80., 0.), 0),
+#                    ((20., -80., 0.), 0),
+#                    ((60., -80., 0.), 0),
+#                    ((120., -80., 0.), 1),
+#                    ((0., 0., 0.), 1)]}
+# dBaumGruppe = {4: [((0., 0., 0.), 1)],
+#                7: [((-70., 0., 0.), 0),
+#                    ((100., 100., 0.), 1)]}
 # dBaumGruppe = {7: [((-100., 0., 0.), 0),
 #                    ((0., 0., 0.), 0),
 #                    ((100., 0., 0.), 0)]}
-# dBaumGruppe = {4: [((0., 0., 0.), 0)]}
-nYears = 2                              # number of time steps modelled
+dBaumGruppe = {7: [((0., 0., 0.), 0)], 4: [((0., 100., 0.), 3)]}
+nYears = 6                              # number of time steps modelled
 lViewPlt = [(5., -70),                  # (elevation, azim. angle)
-            (15., 85),
-            (20., 60)]
+            (10., 55)]
 lYPltBaumGruppe = range(nYears + 1)     # years in which to plot "BaumGruppe"
 
-dPlot = {'Knoten': (False, 'All'),       # 'All', 'Active', 'Inactive'
+dPlot = {'Knoten': (True, 'All'),       # 'All', 'Active', 'Inactive'
          'Zweig': True,
          'Blatt': (False, 'Current')}   # 'All', 'Current', 'Previous'
 
@@ -85,18 +93,20 @@ dMinMax = {'STD': (0, 1, False),        # (min., max., doMod)
 
 # --- Input: Daten fuer Lichtaufnahme ------------------------------------------
 # tNumBk = (20, 20, 50)               # number of "Bloecke" (x, y, z)
-tNumBk = (2, 3, 2)               # number of "Bloecke" (x, y, z)
-tDimBkG = (200., 200., 100.)        # dimensions of "Block" [cm]
-tDirRay = (0, 1, -2)                # direction of sun rays (x, y, z)
+tNumBk = (60, 60, 60)               # number of "Bloecke" (x, y, z)
+tDimBkG = (20., 20., 15.)        # dimensions of "Block" [cm]
+tDirRay = (0, 2, -1)                # direction of sun rays (x, y, z)
 # tLtDilF = (0.5, 0.75, 0.25)         # light dilution factors (x, y, z)
 tLtDilF = (1., 1., 1.)         # light dilution factors (x, y, z)
 intRay = 1.                         # intensity of sun rays
+# prpDLC = 0.5                        # prop. of direct light coll. in block
+# prpSLC = 0.25                       # prop. of scattered light coll. in block
 
 # --- Input: Daten fuer plot ---------------------------------------------------
 eqDstScl = True                     # equidistant scaling of the plots?
-colModeZw = 'Random'                # 'Random' / 'Age'
+colModeZw = 'Age'                # 'Random' / 'Age'
 colModeBl = 'Random'                # 'Random' / 'Age'
-colSetBl = 'Spring'                 # 'Spring' / 'Autumn' (only for 'Random')
+colSetBl = 'Autumn'                 # 'Spring' / 'Autumn' (only for 'Random')
 
 # --- Input: Farbdefinitionen --------------------------------------------------
 lClrZweig = [(0.0, 0.9, 0.0), (0.1, 0.7, 0.0), (0.2, 0.6, 0.0),
@@ -133,7 +143,9 @@ assert len(tLtDilF) == 3
 assert intRay >= 0
 
 # --- Berechnete Werte ---------------------------------------------------------
-dictInpA = {# --- Input: Allgemeine Daten
+dictInpA = {# --- Input: Debug Info
+            'lvlDbg': levelDebugOut,
+            # --- Input: Allgemeine Daten
             'dBaumGruppe': dBaumGruppe,
             'nYears': nYears,
             'lViewPlt': lViewPlt,
@@ -160,6 +172,8 @@ dictInpA = {# --- Input: Allgemeine Daten
             'tDirRayInv': tuple([-tDirRay[k] for k in range(len(tDirRay))]),
             'tLtDilF': tLtDilF,
             'intRay': intRay,
+#             'prpDLC': prpDLC,
+#             'prpSLC': prpSLC,
             # --- Input: Daten fuer plot
             'eqDstScl': eqDstScl,
             'colModeZw': colModeZw,

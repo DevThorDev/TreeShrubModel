@@ -55,6 +55,7 @@ class InputData:
                         print('ERROR: Cannot convert', sBID, 'to an integer.')
                     cMod = import_module(nMod)
                     self.dI[iTp] = getattr(cMod, 'dictInpB')
+                    self.dI[iTp]['iTp'] = iTp
 
     def yieldBaumTraitID(self, iTp = 1, sTrait = 'strType'):
         cTrait = ''
@@ -133,9 +134,10 @@ class Blatt:
                '\nLength: ' + str(self.lenBt) +
                '\nWidth: ' + str(self.widBt) +
                '\nArea: ' + str(self.areaB) +
-               '\nMid point: ' + str(self.pMid) + 
-               '\nRelative position to sunlight: ' + str(self.pRBt) + 
-               '\nAge: ' + str(self.ageBt) + 
+               '\nMid point: ' + str(self.pMid) +
+               '\nRelative position to sunlight: ' + str(self.pRBt) +
+               '\nAge: ' + str(self.ageBt) +
+               '\nIn Block: ' + str(self.keyBk) +
                '\n' + '-'*80 + '\n')
         return sIn
     
@@ -167,22 +169,8 @@ class Blatt:
 #         return inBlock
     
     def addToBlock(self):
-        assert Fkt.isInRange(self.cMk.lAEdgeXtr, self.cMk.tSigRays, self.pMid)
-        pMidBk0 = np.array(self.cMk.dBk[(0, 0, 0)].pM)
-        aSteps = (self.pMid - pMidBk0)/self.cMk.aDim
-        (aMin, aMax) = (np.floor(aSteps), np.ceil(aSteps))
-        for i in range(int(round(aMin[0])), int(round(aMax[0])) + 1):
-            for j in range(int(round(aMin[1])), int(round(aMax[1])) + 1):
-                for k in range(int(round(aMin[2])), int(round(aMax[2]) + 1)):
-                    pMdBkC = np.array([pMidBk0[0] + i*self.cMk.aDim[0],
-                                       pMidBk0[1] + j*self.cMk.aDim[1],
-                                       pMidBk0[2] + k*self.cMk.aDim[2]])
-                    if Fkt.isInBlock(pMdBkC, self.cMk.aDim, self.pMid):
-                        cKBk = self.cMk.goDirRay((i, j, k), retTup = True)
-#                         print('Point', self.pMid, 'is in Block', cKBk, 'with',
-#                               'mid point', np.array(self.cMk.dBk[cKBk].pM))
-#                         print('Blatt', self.IDBt, 'in Block', cKBk, '.')
-                        self.cMk.addBlattToBlock(cKBk, self.IDBt)
+        self.keyBk = Fkt.addObjToBlock(self.cMk, self.pMid, self.dIA['lvlDbg'])
+        self.cMk.addBlattToBlock(self.keyBk, self.dITp, self.IDBt, self.areaB)
 
 ################################################################################
 class Zweig:
@@ -215,7 +203,7 @@ class Zweig:
         self.getSegments(lenZw)
         self.lFDsK = lFDstK
         self.vDsK = np.array([cFctK*self.lenZ for cFctK in self.lFDsK], float)
-        self.getCoordK()
+        self.getCoordKt()
         self.arrX = np.array([self.pS[0]] + [cP[0] for cP in self.lPSegE])
         self.arrY = np.array([self.pS[1]] + [cP[1] for cP in self.lPSegE])
         self.arrZ = np.array([self.pS[2]] + [cP[2] for cP in self.lPSegE])
@@ -258,6 +246,8 @@ class Zweig:
 
     def getSegments(self, lenZw):
         assert len(self.pS) == 3 and len(self.vDirC) == 3
+        if self.dIA['lvlDbg'] > 0 and (self.pS[2] < 0 or lenZw <= 0):
+            print('self.pS[2] =', self.pS[2], '/', 'lenZw =', lenZw)
         assert self.pS[2] >= 0 and lenZw > 0
         assert (len(self.lFDsE) == len(self.lAnEP) and
                 len(self.lAnEP) == len(self.lAnEA))
@@ -276,16 +266,16 @@ class Zweig:
         self.lDirSeg, self.lPSegE, self.lLenSeg = lDirSg, lPSgE, lLenSg
         self.pE, self.lenZ = self.lPSegE[-1], sum(self.lLenSeg)
     
-    def getCoordK(self):
-        lVDKn, lCKn = [V0_3D]*len(self.vDsK), [V0_3D]*len(self.vDsK)
-        lPSKn = ['End']*len(self.vDsK)
+    def getCoordKt(self):
+        lVDKt, lCKt = [V0_3D]*len(self.vDsK), [V0_3D]*len(self.vDsK)
+        lPSKt = ['End']*len(self.vDsK)
         lInpV = [np.array([cK for cK in self.pS]), 0, 0., 0., True]
         # lInpV: [pSC, iSegS, cTDsK, cTLen, incTLen]
         for k in range(len(self.vDsK)):
-            lPSKn[k] = Fkt.getRPsSK(self.lFDsK[k])
-            lInpV = Fkt.getInfoK(lVDKn, lCKn, k, self.vDsK, lInpV,
-                                 self.lDirSeg, self.lLenSeg)
-        self.lKVD, self.lKC, self.lKPS = lVDKn, lCKn, lPSKn
+            lPSKt[k] = Fkt.getRPsSK(self.lFDsK[k])
+            lInpV = Fkt.getInfoKt(lVDKt, lCKt, k, self.vDsK, lInpV,
+                                  self.lDirSeg, self.lLenSeg)
+        self.lKVD, self.lKC, self.lKPS = lVDKt, lCKt, lPSKt
 
     def growKnoten(self, lKN, mxIDKt, iKN, cY):
         for k in range(len(self.lKC)):
@@ -296,12 +286,13 @@ class Zweig:
             nKKt = Fkt.drawDict(self.dITp, dInfo, self.dIA['dMinMax'], 'dDist',
                                 'NKKt', 'dNumNKKt', 'dBndAr', 'dCtWt',
                                 self.sDir, self.cM)
+#             print('Growing Knoten with ID', mxIDKt + iKN, '.')
             lKN.append(Knoten(self.dIA, self.dITp, self.cMk, self.dFAd,
                               mxIDKt + iKN, self.pathID + [self.IDZ], k, cY,
                               self.ageB, self.ageZ, self.lenZ, self.lKC[k],
                               self.lFDsK[k], self.lKPS[k], self.sDir,
                               self.vDirP, self.lKVD[k], len(self.vDsK), nKKt))
-        self.lKZw = [cKn for cKn in lKN[-len(self.lKC):]]
+        self.lKZw = [cKt for cKt in lKN[-len(self.lKC):]]
         return iKN
 
 ################################################################################
@@ -378,30 +369,49 @@ class Knospe:
     def becomeInact(self):
         self.fGerm = False
     
+    # create the dictionary of adjustment factors
+    # "explanatory" v. (in lSEV) determine factors for "response" v. (in lSRV_)
     def getFAdj(self):
         lSRV_C, lSEV = self.dIA['dVDep']['lSRV_C'], self.dIA['dVDep']['lSEV']
         dFAdj = {}
         for cVar in lSRV_C:
+            # list of adjustment factors (lFA) for cur. response v.
+            # contains elements for all explanatory v.
             lFA = Fkt.getLFAdj(lSEV, cVar, self.dTpAdj, self.dMMAdj, self.vDir,
                                vUz, self.cAnRZ, self.pKR, self.lenZ, self.ageZ,
                                self.ageB, self.sDirN, self.cM)
+            # list of according weights, as defined in dITp
             lWts = [self.dITp['dCtWt'][cVar][cSEV] for cSEV in lSEV]
             dFAdj[cVar] = Fkt.weightedGeoMean(lFA, lWts)
         return dFAdj
     
-    def growZweig(self):
+    def growZweig(self, cLtPBk):
+        assert cLtPBk <= 1
         if self.fGerm:
             self.becomeInact()
             dMnMx = self.dIA['dMinMax']
+            # draw a value for the length of this "Zweig"
             lenZw = Fkt.drawVRel(self.dLenZw, self.nKZw, self.sDirN, self.cM,
                                  dMnMx['LenZw'], dMnMx['NKZw'],
                                  self.dFAd['LenZw'], self.dITp['dDist']['NKZw'])
+            # adjust the "Zweig" length according to the available light
+            if self.dIA['lvlDbg'] > 0 and cLtPBk < 1:
+                print('lenZw (before):', lenZw, '- current light propagated in block:', cLtPBk)
+            lenZw *= cLtPBk
+            if self.dIA['lvlDbg'] > 0:
+                print('lenZw (after):', lenZw)
+            # TODO - change
+            if lenZw < 10:
+                return 0
             dInfo = {'VertZ': self.cAnVZ, 'RelPZw': self.cAnRZ,
                      'RelPKt': self.pKR, 'LenZw': self.lenZ, 'AgeZw': 1,
                      'AgeBm': self.ageB}
+            # draw a value for the number of "Knoten" on this "Zweig"
             nKZw = Fkt.drawDict(self.dITp, dInfo, dMnMx, 'dDist', 'NKZw',
                                 'dNumNKZw', 'dBndAr', 'dCtWt', self.sDirN,
                                 self.cM)
+#             # adjust the number of "Knoten" according to the available light
+#             nKZw = max(1, round(nKZw*cLtPBk))
             lFDstK = Fkt.drawLVRel(self.dFPKZw, nKZw, self.sDirN, self.cM,
                                    dMnMx['FctPKZw'], self.dITp['dDist']['NKZw'])
             return Zweig(self.dIA, self.dITp, self.cMk, self.dFAd, self.dFPEZw,
@@ -457,6 +467,7 @@ class Knoten:
         self.lZw = []
         self.lIDPinch = []
         self.pinchIt = False
+        self.addToBlock()
         self.growBlaetter()
         
     def __str__(self):
@@ -489,6 +500,7 @@ class Knoten:
                '\nList of "Zweige" IDs: ' + str([Zw.IDZ for Zw in self.lZw]) +
                '\nList of "Zweige" IDs to pinch out: ' + str(self.lIDPinch) + 
                '\nDictionary of adjustment factors: ' + str(self.dFAd) +
+               '\nIn Block: ' + str(self.keyBk) +
                '\n' + '-'*80 + '\n')
         return sIn
 
@@ -602,8 +614,15 @@ class Knoten:
         if self.fAct:
             for cKKt in self.lKKt:
                 if cKKt.fGerm:
-                    self.lZw.append(cKKt.growZweig())
-                    cKKt.fGerm = False
+                    # light propagated in cur. block determines "Zweig" growth
+                    cLtPrgtBk = sum(self.cMk.dBk[self.keyBk].aLtP)
+                    # only grow a "Zweig" if there is light in cur. block 
+                    if cLtPrgtBk > 0:
+                        # TODO - improve
+                        newZw = cKKt.growZweig(cLtPrgtBk)
+                        if newZw != 0:
+                            self.lZw.append(newZw)
+                            cKKt.fGerm = False
                 
     def growKnoten(self, lNmK, lKN, iKN, cY):
         if self.fAct:
@@ -618,6 +637,12 @@ class Knoten:
         self.fAct = False
         for cKKt in self.lKKt:
             cKKt.becomeInact()
+
+    def addToBlock(self):
+        self.keyBk = Fkt.addObjToBlock(self.cMk, self.pKC, self.dIA['lvlDbg'])
+        self.cMk.addKnotenToBlock(self.keyBk, self.dITp, self.IDKt)
+#         print('Added Knoten with ID', self.IDKt, 'to Block', self.keyBk,
+#               '. Dict of Knoten in this Block:', self.cMk.dBk[self.keyBk].dIDKt)
 
 ################################################################################
 class Baum:
@@ -1002,22 +1027,16 @@ class BaumGruppe:
                 for cBt in cK.lBt:
                     lBt.append(cBt)
     
-    def collectLight(self):
-#         self.cMk = Mosaik(self.dIA)
-        self.cMk.printDBlocks()
-#         for cBk in cMk.lBk:
-#             print(cBk)
-#             pass
-    
     def growBaeume(self, inpDat, prSelIExt = False):
         self.plotBaumGruppe()
+        print('Distributing light...')
+        self.cMk.distributeLight()
         for cTS in range(1, self.nYrs + 1):
             print('-'*24, 'Year:', cTS, '-'*24)
-#             self.collectLight()
-            self.cMk.distributeLight()
             for cB in self.lB:
                 cB.wachse1Y(cTS)
             self.addNewBaeume(inpDat, cTS)
+            self.cMk.distributeLight()
             self.ageBG += 1
             for cB in self.lB:
                 if prSelIExt:
@@ -1036,7 +1055,8 @@ class BaumGruppe:
                 cB.printAllZweige()
             if self.dIA['dPrint']['Blatt']:
                 cB.printAllBlaetter()
-            print(self.cMk)
+            if self.dIA['lvlDbg'] > 0:
+                print(self.cMk)
 
     def eqDstScaling(self, cAx):
         dD = {'x': [0, None, None], 'y': [1, None, None], 'z': [2, None, None]}

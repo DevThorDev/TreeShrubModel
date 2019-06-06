@@ -137,7 +137,7 @@ def getRPsSK(cFDsK):
         cRPsSK = 'Mid'
     return cRPsSK
 
-def getInfoK(lVDKn, lCKn, k, vDsK, lInpV, lDrS, lLnS):
+def getInfoKt(lVDKn, lCKn, k, vDsK, lInpV, lDrS, lLnS):
     [pSt, iSSt, cTDs, cTLn, incTLn] = lInpV
     for iS in range(iSSt, len(lDrS)):
         if incTLn:
@@ -145,7 +145,7 @@ def getInfoK(lVDKn, lCKn, k, vDsK, lInpV, lDrS, lLnS):
         if vDsK[k] <= cTLn:
             lCKn[k], lDrS[iS], _ = avoidNegZVal(pSt, lDrS[iS], vDsK[k] - cTDs)
             if valuesTooSmallError(lCKn[k][2], vDsK[k] - cTDs, vDsK[k]):
-                print('...occurred in "getInfoK" (MID).')
+                print('...occurred in "getInfoKt".')
             lVDKn[k] = lDrS[iS]
             incTLn = False
             break
@@ -510,10 +510,10 @@ def getFAdjVertZ(vD, vZ, adInf, mn = 0., mx = 1.):
         if adInf[2] == 'dec':
             x = math.pi - x
         return mn + x/math.pi*(mx - mn)
-    elif adInf[0] == 'cosA':   # cosine of angle
+    elif adInf[0] == 'cosA':    # cosine of angle
         x = (np.dot(vD, vZ) + np.linalg.norm(vD))/(np.linalg.norm(vD)**2)
         return mn + x*(mx - mn)
-    else:                   # default - adjustment factor = 1
+    else:                       # default - adjustment factor = 1
         return 1
 
 def getFAdjRelPosZw(cRAn, adInf, mn = 0., mx = 1.):
@@ -523,7 +523,7 @@ def getFAdjRelPosZw(cRAn, adInf, mn = 0., mx = 1.):
         if adInf[0] in ['linA', 'linB']:    # linear with angle
             x = cRAn
             if adInf[2] == 'dec':
-                x = 180 - x   # 180 degrees angle relatively to "Zweig"
+                x = 180 - x     # 180 degrees angle relatively to "Zweig"
             return mn + x/180*(mx - mn)
         elif adInf[0] == 'sinA':   # sine of angle
             x = math.sin(convDegToRad(cRAn/2))
@@ -560,7 +560,7 @@ def getFAdjRelPosKt(pR, adInf, mn = 0., mx = 1.):
         if adInf[2] == 'dec':
             x = 1. - x
         return mn + x*(mx - mn)
-    else:                   # default - adjustment factor = 1
+    else:                       # default - adjustment factor = 1
         return 1
 
 def getFAdjLenZw(lnZ, adInf, mn = 0., mx = 1.):
@@ -572,7 +572,7 @@ def getFAdjLenZw(lnZ, adInf, mn = 0., mx = 1.):
         if adInf[2] == 'dec':
             x = 1. - x
         return mn + x*(mx - mn)
-    else:                   # default - adjustment factor = 1
+    else:                       # default - adjustment factor = 1
         return 1
 
 def getFAdjAgeZw(ageZ, adInf, mn = 0., mx = 1.):
@@ -584,7 +584,7 @@ def getFAdjAgeZw(ageZ, adInf, mn = 0., mx = 1.):
         if adInf[2] == 'dec':
             x = 1. - x
         return mn + x*(mx - mn)
-    else:                   # default - adjustment factor = 1
+    else:                       # default - adjustment factor = 1
         return 1
 
 def getFAdjAgeBm(ageB, adInf, mn = 0., mx = 1.):
@@ -596,7 +596,7 @@ def getFAdjAgeBm(ageB, adInf, mn = 0., mx = 1.):
         if adInf[2] == 'dec':
             x = 1. - x
         return mn + x*(mx - mn)
-    else:                   # default - adjustment factor = 1
+    else:                       # default - adjustment factor = 1
         return 1
 
 def getLFAdj(lDID, cVt, dTpA, dFA, vD, vUz, cAR, pKR, lZw, ageZw, ageBm, sDN, cM):
@@ -645,12 +645,16 @@ def getKeyDBk(tK, tDrR):
             lK[k] *= -1
     return tuple(lK)
 
-def isInRange(lAEXtr, tSgR, pToTest):
+def isInRange(lAEXtr, tSgR, pToTest, lDbgOut = 0):
     inRange = True
     for i, cSig in enumerate([-1, 1]):
         for k in range(3):
             if -cSig*tSgR[k]*pToTest[k] + cSig*tSgR[k]*lAEXtr[i][k] < 0:
                 inRange = False
+                if lDbgOut > 0:
+                    print('cSig =', cSig, '/ tSgR[', k, '] =', tSgR[k],
+                          '/ pToTest[', k, '] =', pToTest[k], '/ lAEXtr[', i, 
+                          '][', k, '] =',lAEXtr[i][k])
                 break
     return inRange
 
@@ -662,6 +666,22 @@ def isInBlock(aMdBk, aDimBk, pToTest):
             inBlock = False
             break
     return inBlock
+
+def addObjToBlock(cMk, pCtr, lDbgOut = 0):
+    assert isInRange(cMk.lAEdgeXtr, cMk.tSigRays, pCtr, lDbgOut)
+    pMidBk0 = np.array(cMk.dBk[(0, 0, 0)].pM)
+    aSteps = (pCtr - pMidBk0)/cMk.aDim
+    (aMin, aMax) = (np.floor(aSteps), np.ceil(aSteps))
+    for i in range(int(round(aMin[0])), int(round(aMax[0])) + 1):
+        for j in range(int(round(aMin[1])), int(round(aMax[1])) + 1):
+            for k in range(int(round(aMin[2])), int(round(aMax[2]) + 1)):
+                pMdBkC = np.array([pMidBk0[0] + i*cMk.aDim[0],
+                                   pMidBk0[1] + j*cMk.aDim[1],
+                                   pMidBk0[2] + k*cMk.aDim[2]])
+                if isInBlock(pMdBkC, cMk.aDim, pCtr):
+                    return cMk.goDirRay((i, j, k), retTup = True)
+    print('WARNING: No Block found. Returning (0, 0, 0)...')
+    return (0, 0, 0)
 
 def getCol(lCol, colMode = 'Random', cVal = 1):
     cCol = (0.0, 0.0, 0.0)
